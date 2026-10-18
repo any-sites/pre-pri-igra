@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>При или пре?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#dbe5de;
+  --frame:#9b6a3c;
+  --frame-dark:#6f4a27;
+  --board:#1f3d35;
+  --board-deep:#15302a;
+  --chalk:#f3f1e7;
+  --chalk-dim:#b4c4bb;
+  --yellow:#f6d86f;
+  --rose:#f5a3b8;
+  --good:#a2e6a4;
+  --bad:#ff9d8b;
+  --font-ui:"Nunito","Segoe UI",system-ui,sans-serif;
+  --font-chalk:"Marck Script","Segoe Script","Comic Sans MS",cursive;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:var(--page);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --page:#0d1815; --frame:#7a5430; --frame-dark:#573a1f; }
+}
+:root[data-theme="dark"]{ --page:#0d1815; --frame:#7a5430; --frame-dark:#573a1f; }
+
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none !important}
+body{
+  margin:0;
+  background:var(--page);
+  color:var(--chalk);
+  font-family:var(--font-ui);
+  font-size:17px;
+  line-height:1.5;
+  display:flex;
+  justify-content:center;
+  padding:20px 14px 32px;
+}
+.board{
+  width:100%;
+  max-width:620px;
+  background:var(--board);
+  border:12px solid var(--frame);
+  border-radius:8px;
+  box-shadow:inset 0 0 0 2px var(--frame-dark), inset 0 0 70px rgba(0,0,0,.35), 0 10px 24px rgba(0,0,0,.25);
+  padding:26px 24px 28px;
+  align-self:flex-start;
+}
+@media (max-width:480px){
+  .board{border-width:8px;padding:20px 16px 22px}
+}
+h1,h2{
+  font-family:var(--font-chalk);
+  font-weight:400;
+  line-height:1.1;
+  margin:0 0 8px;
+  text-shadow:0 0 1px rgba(243,241,231,.7);
+}
+h1{font-size:clamp(44px,11vw,60px)}
+h2{font-size:clamp(34px,8vw,44px)}
+p{margin:0 0 14px}
+.lead{color:var(--chalk-dim);margin-bottom:20px}
+
+/* buttons */
+button{font:inherit;color:inherit}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.btn{
+  font-weight:800;font-size:18px;
+  padding:12px 24px;border-radius:12px;
+  border:3px solid var(--chalk);
+  background:var(--chalk);color:var(--board-deep);
+  cursor:pointer;
+}
+.btn:hover{background:#fff}
+.btn.secondary{background:transparent;color:var(--chalk)}
+.btn.secondary:hover{background:rgba(255,255,255,.08)}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+
+/* level picker */
+.levels{display:grid;gap:10px;margin-bottom:22px}
+.level{
+  text-align:left;
+  background:transparent;
+  border:2px solid rgba(243,241,231,.35);
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  display:grid;
+  gap:2px;
+}
+.level:hover{background:rgba(255,255,255,.06)}
+.level[aria-checked="true"]{border-color:var(--yellow);background:rgba(246,216,111,.10)}
+.lv-name{font-weight:800;font-size:19px}
+.lv-desc{color:var(--chalk-dim);font-size:15px}
+.lv-best{color:var(--good);font-size:14px;font-weight:700}
+
+/* cheat sheet */
+details{margin-top:24px;border-top:2px dashed rgba(243,241,231,.3);padding-top:14px}
+summary{cursor:pointer;font-weight:800;font-size:18px}
+.sheet{display:grid;gap:14px;margin-top:12px}
+.sheet h3{margin:0 0 4px;font-family:var(--font-chalk);font-weight:400;font-size:30px}
+.sheet h3.pri{color:var(--yellow)}
+.sheet h3.pre{color:var(--rose)}
+.sheet ul{margin:0;padding-left:20px}
+.sheet li{margin-bottom:4px}
+.sheet .tip{color:var(--chalk-dim);font-size:15px}
+
+/* play */
+.top{display:flex;justify-content:space-between;gap:12px;font-weight:700;color:var(--chalk-dim);font-size:15px;margin-bottom:8px}
+.track{height:6px;border-radius:3px;background:rgba(243,241,231,.18);overflow:hidden;margin-bottom:22px}
+.fill{height:100%;width:0;background:var(--chalk);border-radius:3px;transition:width .25s ease}
+.sentence{
+  font-family:var(--font-chalk);
+  font-size:clamp(32px,7.4vw,44px);
+  line-height:1.4;
+  margin:0 0 22px;
+  min-height:3.4em;
+  text-shadow:0 0 1px rgba(243,241,231,.6);
+}
+.word{white-space:nowrap}
+.gap{
+  display:inline-block;
+  min-width:.7em;
+  text-align:center;
+  border-bottom:3px dashed var(--chalk-dim);
+  line-height:1.05;
+  margin:0 .04em;
+}
+.gap.filled{border-bottom:3px solid var(--good);color:var(--good);animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
+
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.choice{
+  font-family:var(--font-chalk);
+  font-size:clamp(40px,10vw,56px);
+  line-height:1;
+  padding:.3em .2em .4em;
+  border:3px solid currentColor;
+  border-radius:16px;
+  background:transparent;
+  cursor:pointer;
+  transition:background-color .15s, transform .1s;
+}
+.choice-pri{color:var(--yellow)}
+.choice-pre{color:var(--rose)}
+.choice:hover:not(:disabled){background:rgba(255,255,255,.08)}
+.choice:active:not(:disabled){transform:scale(.98)}
+.choice:disabled{cursor:default}
+.choice:disabled:not(.is-right):not(.is-wrong){opacity:.4}
+.choice.is-right{color:var(--good);background:rgba(162,230,164,.14)}
+.choice.is-wrong{color:var(--bad);background:rgba(255,157,139,.12)}
+
+.after{min-height:170px;margin-top:20px}
+.verdict{font-weight:800}
+.verdict.good{color:var(--good)}
+.verdict.bad{color:var(--bad)}
+.full{font-family:var(--font-chalk);font-size:30px;margin-left:6px}
+.why{color:var(--chalk-dim);margin:4px 0 0}
+.after .btn{margin-top:14px}
+
+/* end */
+.score{font-family:var(--font-chalk);font-size:clamp(64px,16vw,88px);line-height:1;margin:6px 0 10px}
+.score small{font-size:.4em;color:var(--chalk-dim)}
+.mistakes{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.mistakes li{border-left:4px solid var(--bad);padding-left:12px}
+.mistakes .w{font-family:var(--font-chalk);font-size:28px;display:block;line-height:1.2}
+.mistakes .r{color:var(--chalk-dim);font-size:15px}
+.mistakes-title{font-weight:800;margin:20px 0 0}
+
+@media (prefers-reduced-motion:reduce){
+  .gap.filled{animation:none}
+  .fill,.choice{transition:none}
+}
+</style>
+</head>
+<body>
+<main class="board">
+
+  <!-- Start -->
+  <section id="start">
+    <h1>При или пре?</h1>
+    <p class="lead">Вставь нужную приставку в слово. В каждом раунде десять слов.</p>
+
+    <div class="levels" role="radiogroup" aria-label="Уровень">
+      <button class="level" role="radio" aria-checked="true" data-level="1">
+        <span class="lv-name">Разминка</span>
+        <span class="lv-desc">При — подойти, присоединить, чуть-чуть, рядом. Пре — очень.</span>
+        <span class="lv-best" data-best="1"></span>
+      </button>
+      <button class="level" role="radio" aria-checked="false" data-level="2">
+        <span class="lv-name">Потруднее</span>
+        <span class="lv-desc">Пре как пере-, слова, которые нужно запомнить.</span>
+        <span class="lv-best" data-best="2"></span>
+      </button>
+      <button class="level" role="radio" aria-checked="false" data-level="3">
+        <span class="lv-name">Хитрые пары</span>
+        <span class="lv-desc">Приступить или преступить? Решает значение слова.</span>
+        <span class="lv-best" data-best="3"></span>
+      </button>
+      <button class="level" role="radio" aria-checked="false" data-level="all">
+        <span class="lv-name">Все вместе</span>
+        <span class="lv-desc">Слова из всех уровней вперемешку.</span>
+        <span class="lv-best" data-best="all"></span>
+      </button>
+    </div>
+
+    <button class="btn" id="go">Начать игру</button>
+
+    <details>
+      <summary>Шпаргалка: когда при, а когда пре</summary>
+      <div class="sheet">
+        <div>
+          <h3 class="pri">При-</h3>
+          <ul>
+            <li>приближение: приехать, прилететь, приплыть</li>
+            <li>присоединение: приклеить, пришить, прибавить</li>
+            <li>неполное действие: приоткрыть, присесть</li>
+            <li>рядом, около: приморский, пришкольный, приусадебный</li>
+            <li>запомнить: приключение, природа, пример, причина</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="pre">Пре-</h3>
+          <ul>
+            <li>«очень»: прекрасный, премилый, презабавный</li>
+            <li>«пере-»: преградить, преодолеть, превратить, преобразить</li>
+            <li>запомнить: президент, премия, премьера, преимущество, прекратить, преследовать</li>
+          </ul>
+        </div>
+        <p class="tip">Подсказка: если вместо приставки можно сказать «очень» или «пере-», пиши пре-. Если слово про приближение, присоединение, «чуть-чуть» или «рядом», пиши при-.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- Play -->
+  <section id="play" hidden>
+    <div class="top">
+      <span>Слово <span id="num">1</span> из <span id="total">10</span></span>
+      <span>Подряд верно: <span id="streak">0</span></span>
+    </div>
+    <div class="track" aria-hidden="true"><div class="fill" id="bar"></div></div>
+
+    <p class="sentence" id="sentence" aria-live="polite"></p>
+
+    <div class="choices">
+      <button class="choice choice-pri" data-a="и" aria-label="при (клавиша И)">при</button>
+      <button class="choice choice-pre" data-a="е" aria-label="пре (клавиша Е)">пре</button>
+    </div>
+
+    <div class="after">
+      <div id="fb" aria-live="polite"></div>
+      <button class="btn" id="next" hidden>Дальше</button>
+    </div>
+  </section>
+
+  <!-- End -->
+  <section id="end" hidden>
+    <h2>Раунд закончен</h2>
+    <p class="score" id="score"></p>
+    <p id="msg"></p>
+    <p id="best-note" class="lv-best"></p>
+    <div id="mistakes-box" hidden>
+      <p class="mistakes-title">Над чем стоит поработать</p>
+      <ul class="mistakes" id="mistakes"></ul>
+    </div>
+    <div class="row">
+      <button class="btn" id="again">Сыграть ещё раз</button>
+      <button class="btn secondary" id="menu">Выбрать уровень</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const ITEMS = [
+  // Разминка
+  {l:1,b:"Гости скоро ",r:"едут",a:"и",e:" к нам.",why:"Гости приближаются к нам. Приближение — пишем при-."},
+  {l:1,b:"Самолёт ",r:"землился",a:"и",e:" в аэропорту.",why:"Самолёт приблизился к земле. Приближение — при-."},
+  {l:1,b:"Мама ",r:"шила",a:"и",e:" пуговицу к пальто.",why:"Пуговицу присоединили к пальто. Присоединение — при-."},
+  {l:1,b:"Нужно ",r:"клеить",a:"и",e:" марку на конверт.",why:"Марку присоединяют к конверту. Присоединение — при-."},
+  {l:1,b:"Кто-то ",r:"открыл",a:"и",e:" дверь — совсем чуть-чуть.",why:"Дверь открыта не до конца. Неполное действие — при-."},
+  {l:1,b:"Мы живём в ",r:"морском",a:"и",e:" городе.",why:"Город стоит рядом с морем. «Рядом, около» — при-."},
+  {l:1,b:"Дети играют на ",r:"школьном",a:"и",e:" участке.",why:"Участок рядом со школой. «Рядом, около» — при-."},
+  {l:1,b:"Бабушка копает грядки на ",r:"усадебном",a:"и",e:" участке.",why:"Участок возле дома, усадьбы. «Рядом, около» — при-."},
+  {l:1,b:"Он ",r:"сел",a:"и",e:" на краешек стула.",why:"Присел — ненадолго, не по-настоящему. Неполное действие — при-."},
+  {l:1,b:"К берегу ",r:"плыл",a:"и",e:" корабль.",why:"Корабль приблизился к берегу. Приближение — при-."},
+  {l:1,b:"В суп надо ",r:"бавить",a:"и",e:" соли.",why:"Соль добавляют, присоединяют к супу. Присоединение — при-."},
+  {l:1,b:"Какой ",r:"красный",a:"е",e:" весенний день!",why:"Прекрасный — «очень красивый». Если можно сказать «очень», пишем пре-."},
+  {l:1,b:"Котёнок такой ",r:"милый",a:"е",e:"!",why:"Премилый — «очень милый». «Очень» — пре-."},
+  {l:1,b:"История получилась ",r:"забавная",a:"е",e:", все смеялись.",why:"Презабавная — «очень забавная». «Очень» — пре-."},
+  {l:1,b:"В этом году ",r:"восходный",a:"е",e:" урожай яблок.",why:"Превосходный — «очень хороший». «Очень» — пре-."},
+  {l:1,b:"Чай получился ",r:"сладкий",a:"е",e:", даже слишком.",why:"Пресладкий — «очень сладкий». «Очень» — пре-."},
+
+  // Потруднее
+  {l:2,b:"Рабочие ",r:"градили",a:"е",e:" дорогу забором.",why:"Преградили — перегородили. Здесь пре- значит то же, что пере-."},
+  {l:2,b:"Путешественники ",r:"одолели",a:"е",e:" горный перевал.",why:"Преодолели — перешли через препятствие. Пре- как пере-."},
+  {l:2,b:"Гусеница ",r:"вратилась",a:"е",e:" в бабочку.",why:"Превратилась — стала совсем другой. Пре- как пере-."},
+  {l:2,b:"Дом ",r:"образился",a:"е",e:" после ремонта.",why:"Преобразился — стал другим. Пре- как пере-."},
+  {l:2,b:"Не ",r:"увеличивай",a:"е",e:" — расскажи, как всё было.",why:"Преувеличивать — рассказывать слишком сильно. Пре- как «слишком»."},
+  {l:2,b:"Надо ",r:"кратить",a:"е",e:" разговоры на уроке.",why:"Прекратить — слово запоминаем: пишется с пре-."},
+  {l:2,b:"Волк ",r:"следовал",a:"е",e:" зайца.",why:"Преследовал — слово запоминаем: пишется с пре-."},
+  {l:2,b:"Мы читали ",r:"ключения",a:"и",e:" Тома Сойера.",why:"Приключения — слово запоминаем: пишется с при-."},
+  {l:2,b:"Мы любим гулять на ",r:"роде",a:"и",e:".",why:"Природа — слово запоминаем: пишется с при-."},
+  {l:2,b:"Назови ",r:"чину",a:"и",e:" опоздания.",why:"Причина — слово запоминаем: пишется с при-."},
+  {l:2,b:"Дай, пожалуйста, ",r:"мер",a:"и",e:", как решать задачу.",why:"Пример — слово запоминаем: пишется с при-."},
+  {l:2,b:"Сегодня выступал ",r:"зидент",a:"е",e:" школьного совета.",why:"Президент — слово запоминаем: пишется с пре-."},
+  {l:2,b:"Фильм выйдет в кино: ",r:"мьера",a:"е",e:" в субботу.",why:"Премьера — слово запоминаем: пишется с пре-."},
+  {l:2,b:"За победу в конкурсе дали ",r:"мию",a:"е",e:".",why:"Премия — слово запоминаем: пишется с пре-."},
+  {l:2,b:"Это ",r:"имущество",a:"е",e:" нашей команды.",why:"Преимущество — слово запоминаем: пишется с пре-."},
+
+  // Хитрые пары
+  {l:3,b:"Поезд ",r:"был",a:"и",e:" на станцию в девять утра.",why:"Прибыл — приехал, приблизился к месту. Приближение — при-."},
+  {l:3,b:"Дедушка долго ",r:"бывал",a:"е",e:" в санатории.",why:"Пребывал — находился, жил. Значение «находиться» — пре-."},
+  {l:3,b:"Они ",r:"ступили",a:"и",e:" к работе.",why:"Приступить — начать. Значение «начать» — при-."},
+  {l:3,b:"Нельзя ",r:"ступать",a:"е",e:" закон.",why:"Преступить закон — нарушить его, перейти черту. Здесь пре-."},
+  {l:3,b:"Рыцарь ",r:"клонил",a:"е",e:" колено перед королём.",why:"Преклонить колено — выразить глубокое уважение. Здесь пре-."},
+  {l:3,b:"Девочка ",r:"клонила",a:"и",e:" голову к плечу подруги.",why:"Приклонить голову — наклонить к чему-то. Приближение — при-."},
+  {l:3,b:"На полке стоит старый радио",r:"ёмник",a:"и",e:".",why:"Приёмник принимает сигнал — пишем при-. Не путай с преемником."},
+  {l:3,b:"Директор уходит, а его ",r:"емник",a:"е",e:" уже выбран.",why:"Преемник — тот, кто продолжит дело после другого. Слово запоминаем: пре-."},
+  {l:3,b:"Тренер ",r:"дал",a:"и",e:" команде уверенности.",why:"Придал — добавил, сообщил (придал уверенности). Здесь при-."},
+  {l:3,b:"Он ",r:"дал",a:"е",e:" друга в трудную минуту.",why:"Предал — изменил, бросил в беде. Здесь пре-."}
+];
+
+const $ = s => document.querySelector(s);
+const ROUND = 10;
+const BEST_KEY = "pri-pre-best";
+const LEVEL_NAMES = {"1":"Разминка","2":"Потруднее","3":"Хитрые пары","all":"Все вместе"};
+
+let level = "1", round = [], idx = 0, score = 0, streak = 0, mistakes = [], answered = false;
+
+function loadBest(){ try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {}; } catch(e){ return {}; } }
+function saveBest(b){ try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch(e){} }
+
+function showBest(){
+  const best = loadBest();
+  document.querySelectorAll("[data-best]").forEach(el => {
+    const b = best[el.dataset.best];
+    el.textContent = b ? "Лучший результат: " + b.score + " из " + b.total : "";
+  });
+}
+
+function shuffle(a){
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function show(id){
+  ["start","play","end"].forEach(s => { $("#" + s).hidden = (s !== id); });
+  window.scrollTo(0, 0);
+}
+
+function startRound(){
+  const pool = level === "all" ? ITEMS : ITEMS.filter(i => String(i.l) === level);
+  round = shuffle(pool).slice(0, ROUND);
+  idx = 0; score = 0; streak = 0; mistakes = [];
+  $("#total").textContent = round.length;
+  show("play");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  const it = round[idx];
+  $("#num").textContent = idx + 1;
+  $("#streak").textContent = streak;
+  $("#bar").style.width = (idx / round.length * 100) + "%";
+
+  const s = $("#sentence");
+  s.textContent = "";
+  const word = document.createElement("span");
+  word.className = "word";
+  const gap = document.createElement("span");
+  gap.className = "gap"; gap.id = "gap"; gap.textContent = "\u00A0";
+  word.append(document.createTextNode("пр"), gap, document.createTextNode(it.r));
+  s.append(document.createTextNode(it.b), word, document.createTextNode(it.e));
+
+  document.querySelectorAll(".choice").forEach(b => {
+    b.disabled = false;
+    b.classList.remove("is-right", "is-wrong");
+  });
+  $("#fb").textContent = "";
+  $("#next").hidden = true;
+}
+
+function answer(letter){
+  if (answered) return;
+  answered = true;
+  const it = round[idx];
+  const ok = letter === it.a;
+  const full = "пр" + it.a + it.r;
+
+  const gap = $("#gap");
+  gap.textContent = it.a;
+  gap.classList.add("filled");
+
+  document.querySelectorAll(".choice").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.a === it.a) b.classList.add("is-right");
+    else if (b.dataset.a === letter) b.classList.add("is-wrong");
+  });
+
+  if (ok){ score++; streak++; }
+  else { streak = 0; mistakes.push({ full: full, why: it.why }); }
+  $("#streak").textContent = streak;
+
+  const fb = $("#fb");
+  fb.textContent = "";
+  const p1 = document.createElement("p");
+  const v = document.createElement("span");
+  v.className = "verdict " + (ok ? "good" : "bad");
+  v.textContent = ok ? "Верно!" : "Не совсем. Правильно:";
+  const w = document.createElement("span");
+  w.className = "full";
+  w.textContent = full;
+  p1.append(v, w);
+  const p2 = document.createElement("p");
+  p2.className = "why";
+  p2.textContent = it.why;
+  fb.append(p1, p2);
+
+  const next = $("#next");
+  next.textContent = idx === round.length - 1 ? "Посмотреть результат" : "Дальше";
+  next.hidden = false;
+  next.focus();
+}
+
+function next(){
+  idx++;
+  if (idx >= round.length) showEnd();
+  else renderQuestion();
+}
+
+function showEnd(){
+  const total = round.length;
+  $("#score").textContent = "";
+  $("#score").append(document.createTextNode(score + " "));
+  const sm = document.createElement("small");
+  sm.textContent = "из " + total;
+  $("#score").append(sm);
+
+  let msg;
+  const ratio = score / total;
+  if (ratio >= 0.9) msg = "Отлично! Приставки у тебя под контролем.";
+  else if (ratio >= 0.7) msg = "Хорошо! Осталось подтянуть пару слов.";
+  else if (ratio >= 0.4) msg = "Неплохо. Загляни в шпаргалку и сыграй ещё раз.";
+  else msg = "Давай разберём правило и попробуем снова. У тебя получится.";
+  $("#msg").textContent = msg;
+
+  const best = loadBest();
+  const prev = best[level];
+  const note = $("#best-note");
+  if (!prev || ratio > prev.score / prev.total){
+    best[level] = { score: score, total: total };
+    saveBest(best);
+    note.textContent = prev ? "Новый рекорд на уровне «" + LEVEL_NAMES[level] + "»!" : "";
+  } else {
+    note.textContent = "";
+  }
+
+  const list = $("#mistakes");
+  list.textContent = "";
+  mistakes.forEach(m => {
+    const li = document.createElement("li");
+    const w = document.createElement("span"); w.className = "w"; w.textContent = m.full;
+    const r = document.createElement("span"); r.className = "r"; r.textContent = m.why;
+    li.append(w, r);
+    list.append(li);
+  });
+  $("#mistakes-box").hidden = mistakes.length === 0;
+
+  $("#bar").style.width = "100%";
+  show("end");
+}
+
+/* events */
+document.querySelectorAll(".level").forEach(btn => {
+  btn.addEventListener("click", () => {
+    level = btn.dataset.level;
+    document.querySelectorAll(".level").forEach(b => b.setAttribute("aria-checked", String(b === btn)));
+  });
+});
+$("#go").addEventListener("click", startRound);
+$("#again").addEventListener("click", startRound);
+$("#menu").addEventListener("click", () => { showBest(); show("start"); });
+$("#next").addEventListener("click", next);
+document.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => answer(b.dataset.a)));
+
+document.addEventListener("keydown", e => {
+  if ($("#play").hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "и" || k === "1") answer("и");
+  else if (k === "е" || k === "2") answer("е");
+});
+
+showBest();
+</script>
+</body>
+</html>
